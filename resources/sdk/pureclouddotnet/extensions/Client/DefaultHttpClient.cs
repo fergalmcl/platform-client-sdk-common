@@ -10,40 +10,33 @@ namespace {{=it.packageName }}.Client
     {
         private RestClient restClient;
 
-        public DefaultHttpClient(int timeout = 100000) : base()
+        public DefaultHttpClient(Configuration config, ClientRestOptions clientOptions) : base()
         {
-            if (timeout > 0)
-            {
-                SetTimeout(timeout);
-            }
 
-            var options = new RestClientOptions(GetConfUri("api", ClientOptions.BaseUrl)){};
-            
-            if (ClientOptions.HttpMessageHandler != null)
+            SetTimeout(timeout);
+            setUserAgent(userAgent);
+
+            var options = new RestClientOptions(ApiClient.GetConfUri("api", clientOptions.BaseUrl)) { };
+
+            if (clientOptions.HttpMessageHandler != null)
             {
-                options = new RestClientOptions(GetConfUri("api", ClientOptions.BaseUrl))
+                options = new RestClientOptions(ApiClient.GetConfUri("api", clientOptions.BaseUrl))
                 {
-                    ConfigureMessageHandler = _ => ClientOptions.HttpMessageHandler 
+                    ConfigureMessageHandler = _ => clientOptions.HttpMessageHandler
                 };
-               
+
             }
 
-            if (Configuration.UserAgent != null)
+            options.UserAgent = this.UserAgent;
+
+            options.Timeout = TimeSpan.FromMilliseconds(this.Timeout);
+
+            if (clientOptions.Proxy != null)
             {
-               options.UserAgent = Configuration.UserAgent;   
+                options.Proxy = clientOptions.Proxy;
             }
 
-            if (Configuration.Timeout > 0)
-            {
-                options.MaxTimeout = Configuration.Timeout;   
-            }
-
-            if (ClientOptions.Proxy != null)
-            {
-                options.Proxy = ClientOptions.Proxy;   
-            }
-
-            restClient = new RestClient();
+            restClient = new RestClient(options);
         }
 
         public override async Task<RestResponse> ExecuteAsync(HttpRequestOptions httpRequestOptions, CancellationToken cancellationToken = default(CancellationToken))
@@ -67,27 +60,28 @@ namespace {{=it.packageName }}.Client
 
         private RestRequest PrepareRestRequest(HttpRequestOptions options)
         {
-            Console.WriteLine(options.Url);
-            var request = new RestRequest(options.Url, options.Method);
+            Method restSharpMethod = (Method)Enum.Parse(typeof(Method), options.Method);
+
+            var request = new RestRequest(options.Url, restSharpMethod);
 
             // add path parameter, if any
-            foreach(var param in options.PathParams)
+            foreach (var param in options.PathParams)
                 request.AddParameter(param.Key, param.Value, ParameterType.UrlSegment);
 
             // add header parameter, if any
-            foreach(var param in options.HeaderParams)
+            foreach (var param in options.HeaderParams)
                 request.AddHeader(param.Key, param.Value);
 
             // add query parameter, if any
-            foreach(var param in options.QueryParams)
+            foreach (var param in options.QueryParams)
                 request.AddQueryParameter(param.Item1, param.Item2);
 
             // add form parameter, if any
-            foreach(var param in options.FormParams)
+            foreach (var param in options.FormParams)
                 request.AddParameter(param.Key, param.Value);
 
             // add file parameter, if any
-            foreach(var param in options.FileParams)
+            foreach (var param in options.FileParams)
             {
                 request.AddFile(param.Value.Name, param.Value.GetFile, param.Value.FileName, param.Value.ContentType);
             }
@@ -103,6 +97,8 @@ namespace {{=it.packageName }}.Client
                     request.AddParameter(options.ContentType, options.PostBody, ParameterType.RequestBody);
                 }
             }
+
+            request.Timeourt = this.Timeout;
 
             return request;
         }

@@ -109,12 +109,6 @@ namespace {{packageName}}.Client
         /// <value>An instance of the Configuration.</value>
         public Configuration Configuration { get; set; }
 
-        /// <summary>
-        /// Gets or sets the RestClient.
-        /// </summary>
-        /// <value>An instance of the RestClient</value>
-        private RestClient RestClient { get; set; }
-
         private RetryConfiguration retryConfig;
         ///<Summary>
         /// Gets or Sets the Retry Configuration
@@ -148,6 +142,26 @@ namespace {{packageName}}.Client
                     // Reset
                     this.gatewayConfig = null;
                 }
+            }
+        }
+
+        private DefaultHttpClient httpClient;
+        public DefaultHttpClient HttpClient {
+            get
+            {
+                if (this.httpClient != null) {
+                    return this.httpClient;
+                } else {
+                    this.httpClient = new DefaultHttpClient(Configuration, ClientOptions);
+                    return this.httpClient;
+                }
+            }
+            set
+            {
+                if (!(value is DefaultHttpClient)) {
+                    throw new ArgumentException("httpclient must be an instance of AbstractHttpClient. See DefaultltHttpClient for a prototype");
+                }
+                this.httpClient = value;
             }
         }
 
@@ -212,8 +226,7 @@ namespace {{packageName}}.Client
             String pathParamsLogin,
             String pathParamsApi) {
             this.GatewayConfig = new GatewayConfiguration(host, protocol, port, pathParamsLogin, pathParamsApi);
-        }
-        
+        }        
 
         // These fields are only applicable to the Code Authorization OAuth flow:
         ///<Summary>
@@ -319,63 +332,41 @@ namespace {{packageName}}.Client
         /// <param name="contentType">Content Type of the request</param>
         /// <returns>Object</returns>
         public Object CallApi(
-            String path, RestSharp.Method method, List<Tuple<String, String>> queryParams, Object postBody,
+            String path, string method, List<Tuple<String, String>> queryParams, Object postBody,
             Dictionary<String, String> headerParams, Dictionary<String, String> formParams,
             Dictionary<String, FileParameter> fileParams, Dictionary<String, String> pathParams,
             String contentType)
         {
-            var request = PrepareRequest(
-                path, method, queryParams, postBody, headerParams, formParams, fileParams,
-                pathParams, contentType);
-
+            var requestOptions = new HttpRequestOptions(
+                url: path,
+                method: method,
+                queryParams: queryParams,
+                headerParams: headerParams,
+                formParams: formParams,
+                fileParams: fileParams,
+                pathParams: pathParams,
+                postBody: postBody,
+                contentType: contentType
+            );
+            
             // Set SDK version
-            request.AddHeader("purecloud-sdk", "{{packageVersion}}");
+            requestOptions.AddHeaderParam("purecloud-sdk", "{{packageVersion}}");
 
             Retry retry = new Retry(this.RetryConfig);
+
             RestResponse response;
 
-
-            var options = new RestClientOptions(GetConfUri("api", ClientOptions.BaseUrl)){};
-            
-            if (ClientOptions.HttpMessageHandler != null)
-            {
-                options = new RestClientOptions(GetConfUri("api", ClientOptions.BaseUrl))
-                {
-                    ConfigureMessageHandler = _ => ClientOptions.HttpMessageHandler 
-                };
-               
-            }
-
-            if (Configuration.UserAgent != null)
-            {
-               options.UserAgent = Configuration.UserAgent;   
-            }
-
-            if (Configuration.Timeout > 0)
-            {
-                options.Timeout = TimeSpan.FromMilliseconds(Configuration.Timeout);
-            }
-
-            if (ClientOptions.Proxy != null)
-            {
-                options.Proxy = ClientOptions.Proxy;   
-            }
-
-            RestClient = new RestClient(options);
-
-            var fullUrl = RestClient.BuildUri(request);
-            string url = fullUrl == null ? path : fullUrl.ToString();
             do
             {
             {{^supportsUWP}}
-                response = RestClient.Execute(request);
+                response = HttpClient.Execute(requestOptions);
             {{/supportsUWP}}
             {{#supportsUWP}}
             // Using async method to perform sync call (uwp-only)
-               response = RestClient.ExecuteAsync(request).Result;
+               response = HttpClient.ExecuteAsync(requestOptions).Result;
             {{/supportsUWP}}
-                Configuration.Logger.Debug(method.ToString(), url, postBody, (int)response.StatusCode, headerParams);
-                Configuration.Logger.Trace(method.ToString(), url, postBody, (int)response.StatusCode, headerParams, response.Headers?
+                Configuration.Logger.Debug(method, path, postBody, (int)response.StatusCode, headerParams);
+                Configuration.Logger.Trace(method, path, postBody, (int)response.StatusCode, headerParams, response.Headers?
                                                              .GroupBy(header => header?.Name)
                                                              .Select(header => new
                                                          {
@@ -398,7 +389,7 @@ namespace {{packageName}}.Client
             }
 
             if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
-                Configuration.Logger.Error(method.ToString(), url, postBody, response.Content, (int)response.StatusCode, headerParams, response.Headers?
+                Configuration.Logger.Error(method, path, postBody, response.Content, (int)response.StatusCode, headerParams, response.Headers?
                                                              .GroupBy(header => header?.Name)
                                                              .Select(header => new
                                                          {
@@ -425,53 +416,32 @@ namespace {{packageName}}.Client
         /// <param name="contentType">Content type.</param>
         /// <returns>The Task instance.</returns>
         public async System.Threading.Tasks.Task<Object> CallApiAsync(
-            String path, RestSharp.Method method, List<Tuple<String, String>> queryParams, Object postBody,
+            String path, string method, List<Tuple<String, String>> queryParams, Object postBody,
             Dictionary<String, String> headerParams, Dictionary<String, String> formParams,
             Dictionary<String, FileParameter> fileParams, Dictionary<String, String> pathParams,
             String contentType)
         {
-            var request = PrepareRequest(
-                path, method, queryParams, postBody, headerParams, formParams, fileParams,
-                pathParams, contentType);
+            var requestOptions = new HttpRequestOptions(
+                url: path,
+                method: method,
+                queryParams: queryParams,
+                headerParams: headerParams,
+                formParams: formParams,
+                fileParams: fileParams,
+                pathParams: pathParams,
+                postBody: postBody,
+                contentType: contentType
+            );
 
-             Retry retry = new Retry(this.RetryConfig);
-             RestResponse response;
+            Retry retry = new Retry(this.RetryConfig);
 
-             var options = new RestClientOptions(GetConfUri("api", ClientOptions.BaseUrl)){};
-            
-            if (ClientOptions.HttpMessageHandler != null)
-            {
-                options = new RestClientOptions(GetConfUri("api", ClientOptions.BaseUrl))
-                {
-                    ConfigureMessageHandler = _ => ClientOptions.HttpMessageHandler 
-                };
-               
-            }
+            RestResponse response;
 
-            if (Configuration.UserAgent != null)
-            {
-               options.UserAgent = Configuration.UserAgent;   
-            }
-
-            if (ClientOptions.Proxy != null)
-            {
-                options.Proxy = ClientOptions.Proxy;   
-            }
-
-            if (Configuration.Timeout > 0)
-            {
-                options.Timeout = TimeSpan.FromMilliseconds(Configuration.Timeout);
-            }
-
-            RestClient = new RestClient(options);
-
-            var fullUrl = RestClient.BuildUri(request);
-            string url = fullUrl == null ? path : fullUrl.ToString();
             do
             {
-                response = await RestClient.ExecuteAsync(request);
-                Configuration.Logger.Debug(method.ToString(), url, postBody, (int)response.StatusCode, headerParams);
-                Configuration.Logger.Trace(method.ToString(), url, postBody, (int)response.StatusCode, headerParams, response.Headers?
+                response = await HttpClient.ExecuteAsync(requestOptions);
+                Configuration.Logger.Debug(method, path, postBody, (int)response.StatusCode, headerParams);
+                Configuration.Logger.Trace(method, path, postBody, (int)response.StatusCode, headerParams, response.Headers?
                                                              .GroupBy(header => header?.Name)
                                                              .Select(header => new
                                                          {

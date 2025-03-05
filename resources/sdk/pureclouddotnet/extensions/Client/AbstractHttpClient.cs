@@ -13,6 +13,7 @@ namespace {{=it.packageName }}.Client
     public abstract class AbstractHttpClient<TRequest, TResponse>
     {
         protected int Timeout { get; set; } = 100000;
+        protected string UserAgent { get; set; } = "null";
 
         public void SetTimeout(int timeout)
         {
@@ -23,10 +24,14 @@ namespace {{=it.packageName }}.Client
             Timeout = timeout;
         }
 
-        // public void SetHttpsAgent(string httpsAgent)
-        // {
-
-        // }
+        public void SetUserAgent(string userAgent)
+        {
+            if (string.IsNullOrEmpty(userAgent))
+            {
+                throw new ArgumentException("UserAgent must not be null or empty");
+            }
+            UserAgent = userAgent;
+        }
 
         public abstract Task<TResponse> ExecuteAsync(HttpRequestOptions httpRequestOptions, CancellationToken cancellationToken = default(CancellationToken));
         public abstract TResponse Execute(HttpRequestOptions httpRequestOptions);

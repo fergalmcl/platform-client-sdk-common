@@ -8,7 +8,7 @@ namespace {{=it.packageName }}.Client
     public class HttpRequestOptions
     {
         public string Url { get; private set; }
-        public RestSharp.Method Method { get; private set; }
+        public string Method { get; private set; }
         public List<Tuple<string, string>> QueryParams { get; private set; }
 
         public Dictionary<string, string> HeaderParams { get; private set; }
@@ -22,7 +22,7 @@ namespace {{=it.packageName }}.Client
 
         public HttpRequestOptions(
             string url,
-            RestSharp.Method method,
+            string method,
             List<Tuple<string, string>> queryParams = null,
             Dictionary<string, string> headerParams = null,
             Dictionary<string, string> formParams = null,
@@ -75,9 +75,13 @@ namespace {{=it.packageName }}.Client
             Url = url;
         }
 
-        public void SetMethod(RestSharp.Method method)
+        public void SetMethod(string method)
         {
-            Method = method;
+            if (string.IsNullOrEmpty(method) || ValidMethods.Contains(method.ToUpper()))
+            {
+                throw new ArgumentException("The 'method' property is required");
+            }
+            Method = method.ToUpper();
         }
 
         // Optional fields
