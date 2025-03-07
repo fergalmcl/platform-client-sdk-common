@@ -1,26 +1,35 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 using RestSharp;
-
+using {{=it.packageName}}.Extensions;
 
 namespace {{=it.packageName }}.Client
 {
-    public class DefaultHttpClient : AbstractHttpClient<RestRequest, RestResponse>
+    public class DefaultHttpClient : AbstractHttpClient<IHttpRequest, IHttpResponse>
     {
         private RestClient restClient;
 
         public DefaultHttpClient(Configuration config, ClientRestOptions clientOptions) : base()
         {
 
-            SetTimeout(timeout);
-            setUserAgent(userAgent);
+            SetTimeout(config.Timeout);
+            SetUserAgent(config.UserAgent);
 
-            var options = new RestClientOptions(ApiClient.GetConfUri("api", clientOptions.BaseUrl)) { };
+            RestClientOptions options = BuildRestOptions(config, clientOptions);
 
+            restClient = new RestClient(options);
+        }
+
+        private RestClientOptions BuildRestOptions(Configuration config, ClientRestOptions clientOptions)
+        {
+            var options = new RestClientOptions(config.ApiClient.GetConfUri(clientOptions.Prefix, clientOptions.BaseUrl)) { };
+            
             if (clientOptions.HttpMessageHandler != null)
             {
-                options = new RestClientOptions(ApiClient.GetConfUri("api", clientOptions.BaseUrl))
+                options = new RestClientOptions(config.ApiClient.GetConfUri(clientOptions.Prefix, clientOptions.BaseUrl))
                 {
                     ConfigureMessageHandler = _ => clientOptions.HttpMessageHandler
                 };
@@ -36,21 +45,43 @@ namespace {{=it.packageName }}.Client
                 options.Proxy = clientOptions.Proxy;
             }
 
-            restClient = new RestClient(options);
+            return options;
         }
 
-        public override async Task<RestResponse> ExecuteAsync(HttpRequestOptions httpRequestOptions, CancellationToken cancellationToken = default(CancellationToken))
+        public override async Task<IHttpResponse> ExecuteAsync(HttpRequestOptions httpRequestOptions, CancellationToken cancellationToken = default(CancellationToken))
         {
             var request = PrepareRestRequest(httpRequestOptions);
 
-            return await restClient.ExecuteAsync(request, cancellationToken);
+            var restResp =  await restClient.ExecuteAsync(request, cancellationToken);
+
+            return ConvertToHttpResponse(restResp);
         }
 
-        public override RestResponse Execute(HttpRequestOptions httpRequestOptions)
+        public override IHttpResponse Execute(HttpRequestOptions httpRequestOptions)
         {
             var request = PrepareRestRequest(httpRequestOptions);
 
-            return restClient.Execute(request);
+            var restResp = restClient.Execute(request);
+
+            return ConvertToHttpResponse(restResp);
+        }
+
+        private IHttpResponse ConvertToHttpResponse(RestResponse response)
+        {
+            return new HttpResponse
+            {
+                StatusCode = (int)response.StatusCode,
+                StatusDescription = response.StatusDescription,
+                Content = response.Content,
+                ErrorMessage = response.ErrorMessage,
+                RawBytes = response.RawBytes,
+                Headers = response.Headers?
+                    .GroupBy(h => h.Name)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => string.Join(";", g.Select(h => h.Value?.ToString()))
+                    ) ?? new Dictionary<string, string>()
+            };
         }
 
         public Uri BuildUri(HttpRequestOptions options)
@@ -60,7 +91,7 @@ namespace {{=it.packageName }}.Client
 
         private RestRequest PrepareRestRequest(HttpRequestOptions options)
         {
-            Method restSharpMethod = (Method)Enum.Parse(typeof(Method), options.Method);
+            Method restSharpMethod = ConvertToRestSharpMethod(options.Method);
 
             var request = new RestRequest(options.Url, restSharpMethod);
 
@@ -98,9 +129,36 @@ namespace {{=it.packageName }}.Client
                 }
             }
 
-            request.Timeourt = this.Timeout;
+            request.Timeout = TimeSpan.FromMilliseconds(this.Timeout);
 
             return request;
+        }
+
+        private Method ConvertToRestSharpMethod(string method)
+        {
+            switch (method.ToUpperInvariant())
+            {
+                case "GET":
+                    return Method.Get;
+                case "POST":
+                    return Method.Post;
+                case "PUT":
+                    return Method.Put;
+                case "DELETE":
+                    return Method.Delete;
+                case "HEAD":
+                    return Method.Head;
+                case "OPTIONS":
+                    return Method.Options;
+                case "PATCH":
+                    return Method.Patch;
+                case "MERGE":
+                    return Method.Merge;
+                case "COPY":
+                    return Method.Copy;
+                default:
+                    throw new ArgumentException($"Unsupported HTTP method: {method}");
+            }
         }
     }
 }

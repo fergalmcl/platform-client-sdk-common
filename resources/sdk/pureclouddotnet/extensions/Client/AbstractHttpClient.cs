@@ -6,11 +6,13 @@ using System.Net.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using RestSharp;
-
+using {{=it.packageName}}.Extensions;
 
 namespace {{=it.packageName }}.Client
 {
     public abstract class AbstractHttpClient<TRequest, TResponse>
+        where TRequest : IHttpRequest
+        where TResponse : IHttpResponse
     {
         protected int Timeout { get; set; } = 100000;
         protected string UserAgent { get; set; } = "null";

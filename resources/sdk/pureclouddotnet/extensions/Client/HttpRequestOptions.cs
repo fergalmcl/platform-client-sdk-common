@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using RestSharp;
 using System.IO;
+using System.Linq;
+using {{=it.packageName}}.Extensions;
+
 
 namespace {{=it.packageName }}.Client
 {
-    public class HttpRequestOptions
+    public class HttpRequestOptions : IHttpRequest
     {
         public string Url { get; private set; }
         public string Method { get; private set; }
@@ -77,7 +80,7 @@ namespace {{=it.packageName }}.Client
 
         public void SetMethod(string method)
         {
-            if (string.IsNullOrEmpty(method) || ValidMethods.Contains(method.ToUpper()))
+            if (string.IsNullOrEmpty(method) || !ValidMethods.Contains(method.ToUpper()))
             {
                 throw new ArgumentException("The 'method' property is required");
             }
