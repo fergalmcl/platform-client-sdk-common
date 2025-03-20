@@ -13,7 +13,6 @@ namespace {{=it.packageName }}.Client
         public string Url { get; private set; }
         public string Method { get; private set; }
         public List<Tuple<string, string>> QueryParams { get; private set; }
-
         public Dictionary<string, string> HeaderParams { get; private set; }
         public Dictionary<string, string> FormParams { get; private set; }
         public Dictionary<string, FileParameter> FileParams { get; private set; }
@@ -21,7 +20,7 @@ namespace {{=it.packageName }}.Client
         public object PostBody { get; private set; }
         public string ContentType { get; private set; }
 
-        private static readonly string[] ValidMethods = { "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD" };
+        private static readonly string[] ValidMethods = { "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD", "MERGE", "COPY" };
 
         public HttpRequestOptions(
             string url,
@@ -65,6 +64,11 @@ namespace {{=it.packageName }}.Client
             if (postBody != null)
             {
                 SetPostBody(postBody);
+            }
+
+            if (contentType != null)
+            {
+                SetContentType(contentType);
             }
         }
 

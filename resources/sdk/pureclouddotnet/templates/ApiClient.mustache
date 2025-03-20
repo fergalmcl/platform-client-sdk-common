@@ -145,8 +145,8 @@ namespace {{packageName}}.Client
             }
         }
 
-        private AbstractHttpClient<IHttpRequest, IHttpResponse> httpClient;
-        public AbstractHttpClient<IHttpRequest, IHttpResponse> HttpClient {
+        private AbstractHttpClient httpClient;
+        public AbstractHttpClient HttpClient {
             get
             {
                 if (this.httpClient != null) {
@@ -158,7 +158,7 @@ namespace {{packageName}}.Client
             }
             set
             {
-                if (!(value is AbstractHttpClient<IHttpRequest, IHttpResponse>)) {
+                if (!(value is AbstractHttpClient)) {
                     throw new ArgumentException("httpclient must be an instance of AbstractHttpClient. See DefaultltHttpClient for a prototype");
                 }
                 this.httpClient = value;
@@ -166,7 +166,7 @@ namespace {{packageName}}.Client
         }
 
         ///<Summary>
-        /// Gets the Login or the API Uri based on Configuration and Gateway COnfiguration
+        /// Gets the Login or the API Uri based on Configuration and Gateway Configuration
         ///</Summary>
         public Uri GetConfUri(String pathType, Uri baseUri) {
             if (pathType.Equals("login")) {
@@ -1054,7 +1054,7 @@ namespace {{packageName}}.Client
         Key = header.Key, 
         Value = header.Value, 
     })
-    .FirstOrDefault(header => header.Key.Equals("Retry-After", StringComparison.OrdinalIgnoreCase));
+    .FirstOrDefault(header => header.Key.Equals("Retry-After"));
 
                     if (retryAfterHeader != null && Int32.TryParse(retryAfterHeader.Value, out int retryAfterSec))
                     {

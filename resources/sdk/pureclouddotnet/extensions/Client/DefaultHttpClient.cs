@@ -3,17 +3,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using RestSharp;
 using {{=it.packageName}}.Extensions;
 
 namespace {{=it.packageName }}.Client
 {
-    public class DefaultHttpClient : AbstractHttpClient<IHttpRequest, IHttpResponse>
+    public class DefaultHttpClient : AbstractHttpClient
     {
         private RestClient restClient;
+        private ClientRestOptions clientOptions;
+        private Configuration configuration;
 
         public DefaultHttpClient(Configuration config, ClientRestOptions clientOptions) : base()
         {
+            this.clientOptions = clientOptions;
+            this.configuration = config;
+
+            config.Timeout = (config.Timeout > 0) ? config.Timeout : 100000;
 
             SetTimeout(config.Timeout);
             SetUserAgent(config.UserAgent);
@@ -25,19 +32,22 @@ namespace {{=it.packageName }}.Client
 
         private RestClientOptions BuildRestOptions(Configuration config, ClientRestOptions clientOptions)
         {
-            var options = new RestClientOptions(config.ApiClient.GetConfUri(clientOptions.Prefix, clientOptions.BaseUrl)) { };
-            
-            if (clientOptions.HttpMessageHandler != null)
-            {
-                options = new RestClientOptions(config.ApiClient.GetConfUri(clientOptions.Prefix, clientOptions.BaseUrl))
-                {
-                    ConfigureMessageHandler = _ => clientOptions.HttpMessageHandler
-                };
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            if (clientOptions == null) throw new ArgumentNullException(nameof(clientOptions));
 
-            }
+            var options = new RestClientOptions(config.ApiClient.GetConfUri(clientOptions.Prefix, clientOptions.BaseUrl)){};
+
+            options.ConfigureMessageHandler = handler =>
+            {
+                if (clientOptions.HttpMessageHandler != null)
+                {
+                    return clientOptions.HttpMessageHandler;
+                }
+
+                return handler;
+            };
 
             options.UserAgent = this.UserAgent;
-
             options.Timeout = TimeSpan.FromMilliseconds(this.Timeout);
 
             if (clientOptions.Proxy != null)
@@ -48,18 +58,18 @@ namespace {{=it.packageName }}.Client
             return options;
         }
 
-        public override async Task<IHttpResponse> ExecuteAsync(HttpRequestOptions httpRequestOptions, CancellationToken cancellationToken = default(CancellationToken))
+        public override async Task<IHttpResponse> ExecuteAsync(IHttpRequest httpRequest, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var request = PrepareRestRequest(httpRequestOptions);
+            var request = PrepareRestRequest((HttpRequestOptions)httpRequest);
 
             var restResp =  await restClient.ExecuteAsync(request, cancellationToken);
 
             return ConvertToHttpResponse(restResp);
         }
 
-        public override IHttpResponse Execute(HttpRequestOptions httpRequestOptions)
+        public override IHttpResponse Execute(IHttpRequest httpRequest)
         {
-            var request = PrepareRestRequest(httpRequestOptions);
+            var request = PrepareRestRequest((HttpRequestOptions)httpRequest);
 
             var restResp = restClient.Execute(request);
 

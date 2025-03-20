@@ -46,6 +46,7 @@ namespace {{=it.packageName}}.Extensions
             string clientSecret, string redirectUri = "", string authorizationCode = "", bool isRefreshRequest = false)
         {
             var path_ = "/oauth/token";
+            var method = "POST";
 
             // This may be uninitialized if no API classes have been constructed yet
             if (apiClient.Configuration == null)
@@ -101,7 +102,7 @@ namespace {{=it.packageName}}.Extensions
 
             // make the HTTP request
             HttpResponse response = (HttpResponse)CallTokenApi(apiClient, path_,
-                "POST", queryParams, postBody, headerParams, formParams, fileParams,
+                method, queryParams, postBody, headerParams, formParams, fileParams,
                 pathParams, httpContentType);
 
             int statusCode = (int) response.StatusCode;
@@ -150,6 +151,7 @@ namespace {{=it.packageName}}.Extensions
             string clientSecret, string orgName, string assertion)
         {
             var path_ = "/oauth/token";
+            var method = "POST";
 
             // This may be uninitialized if no API classes have been constructed yet
             if (apiClient.Configuration == null)
@@ -190,7 +192,7 @@ namespace {{=it.packageName}}.Extensions
 
             // make the HTTP request
             HttpResponse response = (HttpResponse)CallTokenApi(apiClient, path_,
-                "POST", queryParams, postBody, headerParams, formParams, fileParams,
+                method, queryParams, postBody, headerParams, formParams, fileParams,
                 pathParams, httpContentType);
 
             int statusCode = (int) response.StatusCode;
@@ -284,6 +286,7 @@ namespace {{=it.packageName}}.Extensions
         public static ApiResponse<AuthTokenInfo> PostTokenWithHttpInfoPKCE(this ApiClient apiClient, string clientId, string redirectUri, string codeVerifier, string authorizationCode)
         {
             var path_ = "/oauth/token";
+            var method = "POST";
 
             // This may be uninitialized if no API classes have been constructed yet
             if (apiClient.Configuration == null)
@@ -321,7 +324,7 @@ namespace {{=it.packageName}}.Extensions
 
             // make the HTTP request
             HttpResponse response = (HttpResponse)CallTokenApi(apiClient, path_,
-                "POST", queryParams, postBody, headerParams, formParams, fileParams,
+                method, queryParams, postBody, headerParams, formParams, fileParams,
                 pathParams, httpContentType);
 
             int statusCode = (int) response.StatusCode;
@@ -353,8 +356,16 @@ namespace {{=it.packageName}}.Extensions
             var httpClient = new DefaultHttpClient(apiClient.Configuration, apiClient.ClientOptions);
 
             var requestOptions = new HttpRequestOptions(
-                path, method, queryParams, headerParams, formParams, fileParams,
-                pathParams, postBody, contentType);
+                path, 
+                method, 
+                queryParams, 
+                headerParams, 
+                formParams, 
+                fileParams,
+                pathParams, 
+                postBody, 
+                contentType
+            );
 
             var response = httpClient.Execute(requestOptions);
             
@@ -368,50 +379,5 @@ namespace {{=it.packageName}}.Extensions
             
             return (Object) response;
         }
-
-        // private static RestRequest PrepareTokenRequest(
-        //     String path, String method, List<Tuple<String, String>> queryParams, Object postBody,
-        //     Dictionary<String, String> headerParams, Dictionary<String, String> formParams,
-        //     Dictionary<String, FileParameter> fileParams, Dictionary<String, String> pathParams,
-        //     String contentType)
-        // {
-        //     Method restSharpMethod = (RestSharp.Method)Enum.Parse(typeof(RestSharp.Method), method, true);
-
-        //     var request = new RestRequest(path, restSharpMethod);
-
-        //     // add path parameter, if any
-        //     foreach (var param in pathParams)
-        //         request.AddParameter(param.Key, param.Value, ParameterType.UrlSegment);
-
-        //     // add header parameter, if any
-        //     foreach (var param in headerParams)
-        //         request.AddHeader(param.Key, param.Value);
-
-        //     // add query parameter, if any
-        //     foreach (var param in queryParams)
-        //         request.AddQueryParameter(param.Key, param.Value);
-
-        //     // add form parameter, if any
-        //     foreach (var param in formParams)
-        //         request.AddParameter(param.Key, param.Value);
-
-        //     // add file parameter, if any
-        //     foreach (var param in fileParams)
-        //         request.AddFile(param.Value.Name, param.Value.GetFile, param.Value.FileName, param.Value.ContentType);
-
-        //     if (postBody != null) // http body (model or byte[]) parameter
-        //     {
-        //         if (postBody.GetType() == typeof (String))
-        //         {
-        //             request.AddParameter("application/json", postBody, ParameterType.RequestBody);
-        //         }
-        //         else if (postBody.GetType() == typeof (byte[]))
-        //         {
-        //             request.AddParameter(contentType, postBody, ParameterType.RequestBody);
-        //         }
-        //     }
-
-        //     return request;
-        // }
     }
 }

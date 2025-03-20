@@ -4,44 +4,47 @@ using System.Net.Http;
 
 namespace {{=it.packageName }}.Client
 {
-public class ClientRestOptions
-{
-    ///<Summary>
-    /// Base Url
-    ///</Summary>
-    public Uri BaseUrl { get; set; }
-    public string Prefix { get; set; } = "api";
-    private System.Net.IWebProxy proxy;
-    private HttpMessageHandler httpMessageHandler;
-
-    ///<Summary>
-    /// Gets or Sets the HttpMessageHandler
-    ///</Summary>
-    public HttpMessageHandler HttpMessageHandler
+    public class ClientRestOptions
     {
-        get
+        ///<Summary>
+        /// Base Url
+        ///</Summary>
+        public Uri BaseUrl { get; set; }
+        /// <summary>
+        /// API prefix
+        /// </summary>
+        public string Prefix { get; set; } = "api";
+        private System.Net.IWebProxy proxy;
+        private HttpMessageHandler httpMessageHandler;
+
+        ///<Summary>
+        /// Gets or Sets the HttpMessageHandler
+        ///</Summary>
+        public HttpMessageHandler HttpMessageHandler
         {
-            return httpMessageHandler;
+            get
+            {
+                return httpMessageHandler;
+            }
+            set
+            {
+                this.httpMessageHandler = value;
+            }
         }
-        set
+
+        ///<Summary>
+        /// Gets or Sets the Proxy
+        ///</Summary>
+        public System.Net.IWebProxy Proxy
         {
-            this.httpMessageHandler = value;
+            get
+            {
+                return proxy;
+            }
+            set
+            {
+                this.proxy = value;
+            }
         }
     }
-
-    ///<Summary>
-    /// Gets or Sets the Proxy
-    ///</Summary>
-    public System.Net.IWebProxy Proxy
-    {
-        get
-        {
-            return proxy;
-        }
-        set
-        {
-            this.proxy = value;
-        }
-    }
-}
 }

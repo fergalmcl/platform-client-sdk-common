@@ -2,17 +2,15 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Authentication;
 using System.Net.Security;
 using System.Threading;
 using System.Threading.Tasks;
-using RestSharp;
 using {{=it.packageName}}.Extensions;
 
 namespace {{=it.packageName }}.Client
 {
-    public abstract class AbstractHttpClient<TRequest, TResponse>
-        where TRequest : IHttpRequest
-        where TResponse : IHttpResponse
+    public abstract class AbstractHttpClient
     {
         protected int Timeout { get; set; } = 100000;
         protected string UserAgent { get; set; } = "null";
@@ -35,7 +33,7 @@ namespace {{=it.packageName }}.Client
             UserAgent = userAgent;
         }
 
-        public abstract Task<TResponse> ExecuteAsync(HttpRequestOptions httpRequestOptions, CancellationToken cancellationToken = default(CancellationToken));
-        public abstract TResponse Execute(HttpRequestOptions httpRequestOptions);
+        public abstract Task<IHttpResponse> ExecuteAsync(IHttpRequest httpRequest, CancellationToken cancellationToken = default(CancellationToken));
+        public abstract IHttpResponse Execute(IHttpRequest httpRequest);
     }
 }

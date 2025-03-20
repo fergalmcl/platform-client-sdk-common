@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using RestSharp;
 using {{packageName}}.Client;
+using {{packageName}}.Extensions;
 {{#hasImport}}using {{packageName}}.Model;
 {{/hasImport}}
 
@@ -204,6 +205,7 @@ namespace {{packageName}}.Api
                 throw new ApiException(400, "Missing required parameter '{{paramName}}' when calling {{classname}}->{{operationId}}");{{/required}}{{/allParams}}
 
             var localVarPath = "{{path}}";
+            var localVarHttpMethod = "{{httpMethod}}";
             var localVarPathParams = new Dictionary<String, String>();
             var localVarQueryParams = new List<Tuple<String, String>>();
             var localVarHeaderParams = new Dictionary<String, String>(Configuration.DefaultHeader);
@@ -281,9 +283,9 @@ namespace {{packageName}}.Api
             }{{/isOAuth}}{{/authMethods}}
 
             // make the HTTP request
-            HttpResponse localVarResponse = this.Configuration.ApiClient.CallApi(localVarPath,
-                "{{httpMethod}}", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarFileParams,
-                localVarPathParams, localVarHttpContentType) as HttpResponse;
+            IHttpResponse localVarResponse = this.Configuration.ApiClient.CallApi(localVarPath,
+                localVarHttpMethod, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarFileParams,
+                localVarPathParams, localVarHttpContentType) as IHttpResponse;
 
             int localVarStatusCode = (int) localVarResponse.StatusCode;
 
@@ -336,6 +338,7 @@ namespace {{packageName}}.Api
             {{/required}}{{/allParams}}
 
             var localVarPath = "{{path}}";
+            var localVarHttpMethod = "{{httpMethod}}";
             var localVarPathParams = new Dictionary<String, String>();
             var localVarQueryParams = new List<Tuple<String, String>>();
             var localVarHeaderParams = new Dictionary<String, String>(Configuration.DefaultHeader);
@@ -413,9 +416,9 @@ namespace {{packageName}}.Api
             }{{/isOAuth}}{{/authMethods}}
 
             // make the HTTP request
-            HttpResponse localVarResponse = await this.Configuration.ApiClient.CallApiAsync(localVarPath,
-                "{{httpMethod}}", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarFileParams,
-                localVarPathParams, localVarHttpContentType) as HttpResponse;
+            IHttpResponse localVarResponse = await this.Configuration.ApiClient.CallApiAsync(localVarPath,
+                localVarHttpMethod, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarFileParams,
+                localVarPathParams, localVarHttpContentType) as IHttpResponse;
 
             int localVarStatusCode = (int) localVarResponse.StatusCode;
 
